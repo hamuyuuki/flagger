@@ -68,9 +68,27 @@ func TestAppmeshv1beta2Router_Reconcile(t *testing.T) {
 	vnPrimary, err := router.appmeshClient.AppmeshV1beta2().VirtualNodes("default").Get(context.TODO(), primaryName, metav1.GetOptions{})
 	require.NoError(t, err)
 
-	// check FQDN
+	// check serviceDiscovery
 	primaryDNS := fmt.Sprintf("%s.%s.svc.cluster.local.", primaryName, mocks.appmeshCanary.Namespace)
 	assert.Equal(t, primaryDNS, vnPrimary.Spec.ServiceDiscovery.DNS.Hostname)
+	assert.Equal(t, "", vnPrimary.Spec.ServiceDiscovery.DNS.ResponseType)
+
+	// update serviceDiscovery
+	caPrimary, err := mocks.flaggerClient.FlaggerV1beta1().Canaries("default").Get(context.TODO(), mocks.appmeshCanary.Name, metav1.GetOptions{})
+	require.NoError(t, err)
+
+	caClone := caPrimary.DeepCopy()
+	caClone.Spec.Service.ServiceDiscovery.DNS.ResponseType = "ENDPOINTS"
+	caCanary, err := mocks.flaggerClient.FlaggerV1beta1().Canaries("default").Update(context.TODO(), caClone, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// ここでエラーがでるのでなぜエラーがでるのかを確認する。ResponseTypeの反映方法が良くないと思われる
+	err = router.Reconcile(caCanary)
+	require.NoError(t, err)
+
+	vnPrimary, err = router.appmeshClient.AppmeshV1beta2().VirtualNodes("default").Get(context.TODO(), primaryName, metav1.GetOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, "ENDPOINTS", vnPrimary.Spec.ServiceDiscovery.DNS.ResponseType)
 
 	// check timeout
 	assert.Equal(t, int64(30000), vrApex.Spec.Routes[0].HTTPRoute.Timeout.PerRequest.Value)

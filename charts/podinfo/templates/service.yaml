@@ -1,20 +1,50 @@
-{{- if not .Values.canary.enabled }}
-apiVersion: v1
 kind: Service
+apiVersion: v1
 metadata:
-  name: {{ template "podinfo.fullname" . }}
+  name: {{ template "podinfo.name" . }}
   labels:
     app: {{ template "podinfo.name" . }}
-    chart: {{ template "podinfo.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
 spec:
-  type: {{ .Values.service.type }}
+  type: ClusterIP
+  clusterIP: None
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: http
+    - name: http
       protocol: TCP
-      name: http
+      port: 9898
+      targetPort: 9898
   selector:
-    app: {{ template "podinfo.fullname" . }}
-{{- end }}
+    app: {{ template "podinfo.name" . }}-primary
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ template "podinfo.name" . }}-canary
+  labels:
+    app: {{ template "podinfo.name" . }}-canary
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: http
+      protocol: TCP
+      port: 9898
+      targetPort: 9898
+  selector:
+    app: {{ template "podinfo.name" . }}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ template "podinfo.name" . }}-primary
+  labels:
+    app: {{ template "podinfo.name" . }}-primary
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: http
+      protocol: TCP
+      port: 9898
+      targetPort: 9898
+  selector:
+    app: {{ template "podinfo.name" . }}-primary

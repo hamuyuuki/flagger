@@ -109,6 +109,7 @@ func (ar *AppMeshv1beta2Router) reconcileVirtualNode(canary *flaggerv1.Canary, n
 		ServiceDiscovery: &appmeshv1.ServiceDiscovery{
 			DNS: &appmeshv1.DNSServiceDiscovery{
 				Hostname: host,
+				// ResponseType: responseType,
 			},
 		},
 		PodSelector: &metav1.LabelSelector{

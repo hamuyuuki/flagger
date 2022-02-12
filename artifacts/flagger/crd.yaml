@@ -746,6 +746,25 @@ spec:
                                 format: string
                                 type: string
                               type: array
+                    serviceDiscovery:
+                      description: serviceDiscovery
+                      type: object
+                      properties:
+                        dns:
+                          description: dns
+                          type: object
+                          properties:
+                            hostname:
+                              description: hostname
+                              type: string
+                            responseType:
+                              description: responseType
+                              type: string
+                              enum:
+                                - ENDPOINTS
+                                - LOADBALANCER
+                          required:
+                            - hostname
                     apex:
                       description: Metadata to add to the apex service
                       type: object
